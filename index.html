@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth" x-data="{ darkMode: localStorage.getItem('darkMode') === 'true' }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val))" :class="{ 'dark': darkMode }">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Método Joelho Livre - Elimine a Dor no Joelho com Análise de IA</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter & Sora -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Alpine.js for interactivity (FAQ Accordion & Mobile Menu) -->
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+
+    <style>
+        /* Custom styles for the page based on the new design system */
+        :root {
+            --color-primary: #5F30AC; /* Darker purple for higher contrast */
+            --color-text: #212529;
+            --color-background: #F8F9FA;
+            --font-heading: 'Sora', sans-serif;
+            --font-body: 'Inter', sans-serif;
+
+            /* Variables for Rainbow Button Animation with higher contrast */
+            --color-1: 265 85% 55%; /* Deep Indigo */
+            --color-2: 290 90% 60%; /* Vibrant Magenta */
+            --color-3: 320 88% 58%; /* Strong Pink/Purple */
+            --color-4: 250 95% 57%; /* Rich Blue/Purple */
+            --color-5: 275 92% 56%; /* Deep Violet */
+            --speed: 3s;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background-color: var(--color-background);
+            color: var(--color-text);
+        }
+        
+        .dark body {
+            background-color: #111827; /* gray-900 */
+            color: var(--color-background);
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: var(--font-heading);
+        }
+
+        /* Custom gradient for final CTA */
+        .final-cta-gradient {
+             background: linear-gradient(135deg, #f3eefc 0%, #e9e4f4 100%);
+        }
+        .dark .final-cta-gradient {
+            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+        }
+
+        /* Animation classes */
+        .fade-in-on-scroll {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .fade-in-on-scroll.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Loading Spinner for Gemini API Call */
+        .loader {
+            border: 4px solid #f3f3f3; /* Light grey */
+            border-top: 4px solid var(--color-primary); /* Purple */
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        .tts-loader {
+             width: 20px;
+             height: 20px;
+             border-width: 2px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* Styling for Gemini API response */
+        #gemini-response h3 {
+            font-size: 1.25rem; /* text-xl */
+            font-weight: 700; /* font-bold */
+            margin-top: 1.5rem; /* mt-6 */
+            margin-bottom: 0.5rem; /* mb-2 */
+            color: #3c1e70; /* Darker Purple */
+        }
+        .dark #gemini-response h3 {
+             color: #a78bfa; /* violet-400 */
+        }
+        #gemini-response ul {
+            list-style-type: disc;
+            padding-left: 1.5rem; /* pl-6 */
+            margin-top: 0.5rem; /* mt-2 */
+            color: #4b5563; /* gray-600 */
+        }
+        .dark #gemini-response ul {
+            color: #d1d5db; /* gray-300 */
+        }
+        #gemini-response li {
+            margin-bottom: 0.5rem; /* mb-2 */
+        }
+
+        /* Marquee styles */
+        .marquee-container {
+            --gap: 1.5rem; /* 24px */
+            --duration: 60s;
+        }
+        .marquee-track {
+            animation: marquee var(--duration) linear infinite;
+        }
+        .marquee-container:hover .marquee-track {
+            animation-play-state: paused;
+        }
+        @keyframes marquee {
+            from { transform: translateX(0); }
+            to { transform: translateX(calc(-100% - var(--gap))); }
+        }
+        
+        /* Notification styles */
+        #offer-notification {
+            opacity: 0;
+            transform: translateY(50px);
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+            visibility: hidden;
+        }
+        #offer-notification.visible {
+            opacity: 1;
+            transform: translateY(0);
+            visibility: visible;
+        }
+        
+        /* Rainbow Button Styles */
+        @keyframes rainbow {
+            0% { background-position: 0%; }
+            100% { background-position: 200%; }
+        }
+        .rainbow-button {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600; /* font-semibold */
+            color: white;
+            cursor: pointer;
+            border-radius: 0.75rem; /* rounded-xl */
+            border: 2px solid transparent;
+            background-clip: padding-box, border-box;
+            background-origin: border-box;
+            /* 1. Solid background color, 2. Animated gradient for border */
+            background-image: linear-gradient(var(--color-primary), var(--color-primary)), linear-gradient(90deg, hsl(var(--color-1)), hsl(var(--color-2)), hsl(var(--color-3)), hsl(var(--color-4)), hsl(var(--color-5)), hsl(var(--color-1)));
+            background-size: 200%;
+            animation: rainbow var(--speed) infinite linear;
+            transition: transform 0.2s ease-in-out, filter 0.2s ease-in-out;
+        }
+        .rainbow-button::before {
+            content: '';
+            position: absolute;
+            bottom: -25%;
+            left: 50%;
+            z-index: -1;
+            height: 30%;
+            width: 70%;
+            transform: translateX(-50%);
+            background-image: inherit; /* Inherits the gradient from the parent */
+            background-size: inherit;
+            animation: inherit;
+            filter: blur(1rem);
+            opacity: 0.8;
+        }
+        .rainbow-button:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+
+        /* Spotlight Card Styles */
+        [data-glow] {
+            --base: 280;      /* HSL hue for purple */
+            --spread: 300;
+            --radius: 16;      /* Corresponds to rounded-2xl */
+            --border: 2;
+            --size: 250;
+            --border-size: calc(var(--border, 2) * 1px);
+            --spotlight-size: calc(var(--size, 150) * 1px);
+            --hue: calc(var(--base) + (var(--xp, 0) * var(--spread, 0)));
+            
+            position: relative;
+            touch-action: none;
+        }
+
+        [data-glow]::before,
+        [data-glow]::after {
+            pointer-events: none;
+            content: "";
+            position: absolute;
+            inset: calc(var(--border-size) * -1);
+            border: var(--border-size) solid transparent;
+            border-radius: calc(var(--radius) * 1px);
+            background-attachment: fixed;
+            background-size: calc(100% + (2 * var(--border-size))) calc(100% + (2 * var(--border-size)));
+            background-repeat: no-repeat;
+            background-position: 50% 50%;
+            mask: linear-gradient(transparent, transparent), linear-gradient(white, white);
+            mask-clip: padding-box, border-box;
+            mask-composite: intersect;
+        }
+        
+        [data-glow]::before {
+            background-image: radial-gradient(
+                calc(var(--spotlight-size) * 0.75) calc(var(--spotlight-size) * 0.75) at
+                calc(var(--x, 0) * 1px)
+                calc(var(--y, 0) * 1px),
+                hsl(var(--hue, 210) 100% 50% / 1), transparent 100%
+            );
+            filter: brightness(1.5);
+        }
+        
+        [data-glow]::after {
+            background-image: radial-gradient(
+                calc(var(--spotlight-size) * 0.5) calc(var(--spotlight-size) * 0.5) at
+                calc(var(--x, 0) * 1px)
+                calc(var(--y, 0) * 1px),
+                hsl(0 100% 100% / 1), transparent 100%
+            );
+        }
+
+        /* Image Auto Slider Styles */
+        @keyframes scroll-right {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .infinite-scroll {
+            animation: scroll-right 40s linear infinite;
+        }
+        .scroll-container {
+            mask: linear-gradient(90deg, transparent 0%, black 10%, black 90%, transparent 100%);
+            -webkit-mask: linear-gradient(90deg, transparent 0%, black 10%, black 90%, transparent 100%);
+        }
+        .image-item {
+            transition: transform 0.3s ease, filter 0.3s ease;
+        }
+        .image-item:hover {
+            transform: scale(1.05);
+            filter: brightness(1.1);
+        }
+
+        /* Blur Text Animation */
+        #blur-text-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        #blur-text-container > span {
+            display: inline-block;
+            filter: blur(10px);
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: filter 0.5s ease, opacity 0.5s ease, transform 0.5s ease;
+        }
+        #blur-text-container.in-view > span {
+            filter: blur(0px);
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Shuffle Grid Styles */
+        #shuffle-grid .grid-square {
+            background-size: cover;
+            background-position: center;
+            transition: all 1.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Myna Hero Animation */
+        .hero-word {
+            display: inline-block;
+            opacity: 0;
+            filter: blur(10px);
+            transform: translateY(50px);
+            transition: opacity 0.6s ease, filter 0.6s ease, transform 0.6s ease;
+        }
+        .hero-word.visible {
+            opacity: 1;
+            filter: blur(0px);
+            transform: translateY(0);
+        }
+        .fade-in-item {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        .fade-in-item.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="bg-white dark:bg-gray-900">
+        <!-- 0. NEW Navigation Bar -->
+        <header x-data="{ menuState: false }" class="relative z-50">
+            <nav :class="{'bg-white/80 dark:bg-gray-950/80 backdrop-blur': menuState}" class="fixed w-full border-b border-dashed border-gray-200/80 dark:border-gray-800/80">
+                <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="flex flex-wrap items-center justify-between gap-6 py-3 lg:gap-0 lg:py-4">
+                        <div class="flex w-full justify-between lg:w-auto">
+                            <a href="#" aria-label="home" class="flex items-center space-x-2">
+                                <i data-lucide="heart-pulse" class="h-8 w-8 text-[var(--color-primary)]"></i>
+                                <span class="text-xl font-bold text-[#212529] dark:text-gray-100">Método Joelho Livre</span>
+                            </a>
+                            <button @click="menuState = !menuState" aria-label="Toggle Menu" class="relative z-20 -m-2.5 -mr-4 block cursor-pointer p-2.5 lg:hidden">
+                                <i data-lucide="menu" :class="{'rotate-180 scale-0 opacity-0': menuState}" class="h-6 w-6 transition-transform duration-200"></i>
+                                <i data-lucide="x" :class="{'rotate-0 scale-100 opacity-100': menuState}" class="absolute inset-0 m-auto h-6 w-6 -rotate-180 scale-0 opacity-0 transition-transform duration-200"></i>
+                            </button>
+                        </div>
+                        <div :class="{'block': menuState, 'hidden': !menuState}" class="mb-6 w-full flex-wrap items-center justify-end space-y-8 rounded-3xl border border-gray-200 bg-white p-6 shadow-2xl shadow-gray-300/20 lg:m-0 lg:flex lg:w-fit lg:flex-nowrap lg:gap-6 lg:space-y-0 lg:border-transparent lg:bg-transparent lg:p-0 lg:shadow-none dark:bg-gray-900 dark:border-gray-800 dark:shadow-none">
+                            <div class="lg:pr-4">
+                                <ul class="space-y-6 text-base lg:flex lg:gap-8 lg:space-y-0 lg:text-sm">
+                                    <li><a href="#product-details" @click="menuState = false" class="text-gray-600 hover:text-[var(--color-primary)] dark:text-gray-300 dark:hover:text-[var(--color-primary)] block duration-150">O Método</a></li>
+                                    <li><a href="#gemini-feature" @click="menuState = false" class="text-gray-600 hover:text-[var(--color-primary)] dark:text-gray-300 dark:hover:text-[var(--color-primary)] block duration-150">Análise IA</a></li>
+                                    <li><a href="#testimonials" @click="menuState = false" class="text-gray-600 hover:text-[var(--color-primary)] dark:text-gray-300 dark:hover:text-[var(--color-primary)] block duration-150">Depoimentos</a></li>
+                                    <li><a href="#offer" @click="menuState = false" class="text-gray-600 hover:text-[var(--color-primary)] dark:text-gray-300 dark:hover:text-[var(--color-primary)] block duration-150">Oferta</a></li>
+                                    <li><a href="#faq" @click="menuState = false" class="text-gray-600 hover:text-[var(--color-primary)] dark:text-gray-300 dark:hover:text-[var(--color-primary)] block duration-150">FAQs</a></li>
+                                </ul>
+                            </div>
+                            <div class="flex items-center w-full flex-col space-y-3 sm:flex-row sm:gap-3 sm:space-y-0 md:w-fit lg:border-l lg:pl-6 border-gray-200/80 dark:border-gray-800/80">
+                                <button @click="darkMode = !darkMode" class="p-2 rounded-md text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800 transition-colors" aria-label="Toggle theme">
+                                    <i data-lucide="sun" class="h-5 w-5 block dark:hidden"></i>
+                                    <i data-lucide="moon" class="h-5 w-5 hidden dark:block"></i>
+                                </button>
+                                <a href="#offer" @click="menuState = false" class="rainbow-button h-10 px-6 text-sm">
+                                    <span>Quero Viver Sem Dor!</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        </header>
+
+        <main>
+            <!-- 1. NEW Shuffle Hero Section -->
+            <section class="w-full px-4 sm:px-8 py-12 grid grid-cols-1 md:grid-cols-2 items-center gap-8 max-w-6xl mx-auto pt-28 lg:pt-32 bg-white dark:bg-gray-900">
+                <div class="text-center md:text-left">
+                    <span class="block mb-4 text-xs md:text-sm text-[var(--color-primary)] font-medium">
+                      Uma vida sem limitações
+                    </span>
+                    <h3 class="text-4xl md:text-5xl lg:text-6xl font-semibold text-[#212529] dark:text-gray-100">
+                        Recupere a sua liberdade de movimento
+                    </h3>
+                    <p class="text-base md:text-lg text-gray-700 dark:text-gray-400 my-4 md:my-6">
+                        Chega de deixar que a dor no joelho dite as regras. O nosso método comprovado já ajudou milhares de pessoas a voltar a fazer o que amam, sem cirurgias ou medicamentos.
+                    </p>
+                    <a href="#offer" class="rainbow-button h-12 px-8 w-full sm:w-auto">
+                        Quero o meu joelho livre
+                    </a>
+                </div>
+                <div id="shuffle-grid" class="grid grid-cols-4 grid-rows-4 h-[300px] sm:h-[450px] gap-1">
+                    <!-- Squares will be generated by JavaScript -->
+                </div>
+            </section>
+
+            <!-- 2. About Me Section -->
+            <section id="about-me" class="py-20 lg:py-32 bg-white dark:bg-gray-900">
+                <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center max-w-4xl">
+                    <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#212529] dark:text-gray-100 mb-4">Conheça o Especialista Que Vai Guiar a Sua Recuperação</h2>
+                    <p id="blur-text-container" class="mt-8 text-lg text-gray-600 dark:text-gray-400 leading-relaxed">
+                        O meu nome é Eder, e eu não sou apenas um especialista em reabilitação física. Sou alguém que, tal como você, já sentiu a frustração da dor no joelho. Após uma cirurgia, mergulhei de cabeça na ciência do movimento para criar um método que me permitiu voltar a praticar desporto sem limitações. Hoje, com mais de 1.000 alunos recuperados e experiência em cirurgias no Hospital Adriano Jorge, a minha missão é partilhar consigo o caminho exato para uma vida livre de dor, de forma segura e definitiva.
+                    </p>
+                </div>
+            </section>
+
+
+            <!-- NEW: Image Auto Slider Section -->
+            <section id="bento-gallery" class="py-20 lg:py-32 bg-white dark:bg-gray-900">
+                <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="text-center max-w-3xl mx-auto">
+                        <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#212529] dark:text-gray-100 mb-4 fade-in-on-scroll">Sua Nova Vida Sem Dor, em Movimento</h2>
+                        <p class="text-lg text-gray-600 dark:text-gray-400 fade-in-on-scroll" style="transition-delay: 100ms;">Imagine voltar a fazer as atividades que você ama, com a confiança e a liberdade que você merece. Veja os momentos que esperam por você.</p>
+                    </div>
+                    <div class="relative z-10 w-full flex items-center justify-center py-8 mt-8">
+                        <div class="scroll-container w-full">
+                            <div id="image-scroll-track" class="infinite-scroll flex gap-6 w-max">
+                                <!-- Images will be injected by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- NEW: Section 8: Product Details (IMPROVED) -->
+            <section id="product-details" class="py-20 lg:py-32 bg-[#F8F9FA] dark:bg-gray-800">
+                <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="text-center max-w-3xl mx-auto">
+                        <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#212529] dark:text-gray-100 mb-4 fade-in-on-scroll">O que torna o Método Joelho Livre único?</h2>
+                        <p class="text-lg text-gray-600 dark:text-gray-400 fade-in-on-scroll" style="transition-delay: 100ms;">A maioria dos tratamentos falha porque trata toda dor como se fosse igual. O Método Joelho Livre é o único que separa os treinos pela localização exata da sua dor, atacando a causa raiz do problema.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 relative z-10 py-10 max-w-7xl mx-auto">
+                        <!-- Feature 1 -->
+                        <div data-glow class="flex flex-col lg:border-r lg:border-b border-gray-200 dark:border-gray-700 py-10 relative group/feature overflow-hidden rounded-2xl">
+                            <div class="opacity-0 group-hover/feature:opacity-100 transition duration-200 absolute inset-0 h-full w-full bg-gradient-to-t from-violet-50 dark:from-gray-700/30 to-transparent pointer-events-none"></div>
+                            <div class="mb-4 relative z-10 px-10"><i data-lucide="search" class="w-8 h-8 text-[var(--color-primary)]"></i></div>
+                            <div class="text-lg font-bold mb-2 relative z-10 px-10 text-gray-900 dark:text-gray-100">
+                                <div class="absolute left-0 inset-y-0 h-6 group-hover/feature:h-8 w-1 rounded-tr-full rounded-br-full bg-gray-300 dark:bg-gray-600 group-hover/feature:bg-[var(--color-primary)] transition-all duration-200 origin-center"></div>
+                                <span class="group-hover/feature:translate-x-2 transition duration-200 inline-block">Diagnóstico Preciso</span>
+                            </div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 max-w-xs relative z-10 px-10">Testes simples para identificar a causa real e seu tipo específico de dor.</p>
+                        </div>
+                        <!-- Feature 2 -->
+                        <div data-glow class="flex flex-col lg:border-r lg:border-b border-gray-200 dark:border-gray-700 py-10 relative group/feature overflow-hidden rounded-2xl">
+                            <div class="opacity-0 group-hover/feature:opacity-100 transition duration-200 absolute inset-0 h-full w-full bg-gradient-to-t from-violet-50 dark:from-gray-700/30 to-transparent pointer-events-none"></div>
+                            <div class="mb-4 relative z-10 px-10"><i data-lucide="target" class="w-8 h-8 text-[var(--color-primary)]"></i></div>
+                            <div class="text-lg font-bold mb-2 relative z-10 px-10 text-gray-900 dark:text-gray-100">
+                                <div class="absolute left-0 inset-y-0 h-6 group-hover/feature:h-8 w-1 rounded-tr-full rounded-br-full bg-gray-300 dark:bg-gray-600 group-hover/feature:bg-[var(--color-primary)] transition-all duration-200 origin-center"></div>
+                                <span class="group-hover/feature:translate-x-2 transition duration-200 inline-block">Treinos por Região</span>
+                            </div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 max-w-xs relative z-10 px-10">Protocolos exclusivos para dor na frente, atrás e lateral do joelho.</p>
+                        </div>
+                        <!-- Feature 3 -->
+                        <div data-glow class="flex flex-col lg:border-b border-gray-200 dark:border-gray-700 py-10 relative group/feature overflow-hidden rounded-2xl">
+                            <div class="opacity-0 group-hover/feature:opacity-100 transition duration-200 absolute inset-0 h-full w-full bg-gradient-to-t from-violet-50 dark:from-gray-700/30 to-transparent pointer-events-none"></div>
+                            <div class="mb-4 relative z-10 px-10"><i data-lucide="dumbbell" class="w-8 h-8 text-[var(--color-primary)]"></i></div>
+                            <div class="text-lg font-bold mb-2 relative z-10 px-10 text-gray-900 dark:text-gray-100">
+                                <div class="absolute left-0 inset-y-0 h-6 group-hover/feature:h-8 w-1 rounded-tr-full rounded-br-full bg-gray-300 dark:bg-gray-600 group-hover/feature:bg-[var(--color-primary)] transition-all duration-200 origin-center"></div>
+                                <span class="group-hover/feature:translate-x-2 transition duration-200 inline-block">Fortalecimento</span>
+                            </div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 max-w-xs relative z-10 px-10">Exercícios para fazer em casa, sem equipamentos, com progressão segura.</p>
+                        </div>
+                        <!-- Feature 4 -->
+                        <div data-glow class="flex flex-col lg:border-r border-gray-200 dark:border-gray-700 py-10 relative group/feature overflow-hidden rounded-2xl">
+                            <div class="opacity-0 group-hover/feature:opacity-100 transition duration-200 absolute inset-0 h-full w-full bg-gradient-to-b from-violet-50 dark:from-gray-700/30 to-transparent pointer-events-none"></div>
+                            <div class="mb-4 relative z-10 px-10"><i data-lucide="leaf" class="w-8 h-8 text-[var(--color-primary)]"></i></div>
+                            <div class="text-lg font-bold mb-2 relative z-10 px-10 text-gray-900 dark:text-gray-100">
+                                <div class="absolute left-0 inset-y-0 h-6 group-hover/feature:h-8 w-1 rounded-tr-full rounded-br-full bg-gray-300 dark:bg-gray-600 group-hover/feature:bg-[var(--color-primary)] transition-all duration-200 origin-center"></div>
+                                <span class="group-hover/feature:translate-x-2 transition duration-200 inline-block">Apoio Nutricional</span>
+                            </div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 max-w-xs relative z-10 px-10">Protocolo anti-inflamatório para acelerar sua recuperação naturalmente.</p>
+                        </div>
+                        <!-- Feature 5 -->
+                        <div data-glow class="flex flex-col lg:border-r border-gray-200 dark:border-gray-700 py-10 relative group/feature overflow-hidden rounded-2xl">
+                            <div class="opacity-0 group-hover/feature:opacity-100 transition duration-200 absolute inset-0 h-full w-full bg-gradient-to-b from-violet-50 dark:from-gray-700/30 to-transparent pointer-events-none"></div>
+                            <div class="mb-4 relative z-10 px-10"><i data-lucide="shield" class="w-8 h-8 text-[var(--color-primary)]"></i></div>
+                            <div class="text-lg font-bold mb-2 relative z-10 px-10 text-gray-900 dark:text-gray-100">
+                                <div class="absolute left-0 inset-y-0 h-6 group-hover/feature:h-8 w-1 rounded-tr-full rounded-br-full bg-gray-300 dark:bg-gray-600 group-hover/feature:bg-[var(--color-primary)] transition-all duration-200 origin-center"></div>
+                                <span class="group-hover/feature:translate-x-2 transition duration-200 inline-block">Core de Apoio</span>
+                            </div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 max-w-xs relative z-10 px-10">Fortaleça a musculatura de apoio para blindar seu joelho de futuras dores.</p>
+                        </div>
+                        <!-- Feature 6 -->
+                        <div data-glow class="flex flex-col py-10 relative group/feature overflow-hidden rounded-2xl">
+                            <div class="opacity-0 group-hover/feature:opacity-100 transition duration-200 absolute inset-0 h-full w-full bg-gradient-to-b from-violet-50 dark:from-gray-700/30 to-transparent pointer-events-none"></div>
+                            <div class="mb-4 relative z-10 px-10"><i data-lucide="calendar-days" class="w-8 h-8 text-[var(--color-primary)]"></i></div>
+                            <div class="text-lg font-bold mb-2 relative z-10 px-10 text-gray-900 dark:text-gray-100">
+                                <div class="absolute left-0 inset-y-0 h-6 group-hover/feature:h-8 w-1 rounded-tr-full rounded-br-full bg-gray-300 dark:bg-gray-600 group-hover/feature:bg-[var(--color-primary)] transition-all duration-200 origin-center"></div>
+                                <span class="group-hover/feature:translate-x-2 transition duration-200 inline-block">Plano de Ação</span>
+                                </div>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 max-w-xs relative z-10 px-10">Um passo a passo claro, da semana 1 à manutenção para nunca mais ter dor.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ✨ Gemini API Feature Section ✨ -->
+                <section id="gemini-feature" class="py-20 lg:py-32 bg-white dark:bg-gray-900">
+                    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                        <div class="max-w-3xl mx-auto text-center">
+                            <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#212529] dark:text-gray-100 mb-4 fade-in-on-scroll">Receba um Plano de Exercícios Inicial ✨</h2>
+                            <p class="text-lg text-gray-600 dark:text-gray-400 mb-8 fade-in-on-scroll" style="transition-delay: 100ms;">
+                                Não tem a certeza por onde começar? Descreva a sua dor e a nossa inteligência artificial irá gerar um plano com 2-3 exercícios simples e seguros para iniciar a sua recuperação.
+                            </p>
+                            <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-2xl shadow-inner fade-in-on-scroll" style="transition-delay: 200ms;">
+                                <textarea id="pain-description" rows="4" class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:placeholder-gray-400" placeholder="Ex: Sinto uma dor aguda na frente do joelho direito ao subir escadas, e uma dor constante na lateral depois de correr..."></textarea>
+                                <button id="gemini-button" class="rainbow-button mt-4 w-full h-12 text-base">
+                                    Gerar Plano de Exercícios
+                                </button>
+                            </div>
+                            <div id="gemini-result-container" class="mt-8 text-left" style="display: none;">
+                                <div id="loader-container" class="text-center">
+                                    <div class="loader"></div>
+                                    <p class="text-gray-600 dark:text-gray-400">A criar o seu plano personalizado...</p>
+                                </div>
+                                <div id="gemini-response" class="space-y-4"></div>
+                                <p id="gemini-disclaimer" class="mt-6 text-sm text-gray-500 dark:text-gray-400 italic" style="display: none;">
+                                    <strong>Aviso:</strong> Este é um plano inicial gerado por IA e não substitui a avaliação completa do método por um profissional. Os resultados são sugestões baseadas em padrões comuns.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- 5. Testimonials Section (IMPROVED) -->
+                <section id="testimonials" class="py-20 lg:py-32 bg-[#F8F9FA] dark:bg-gray-800">
+                     <audio id="tts-audio-player" style="display: none;"></audio>
+                    <div class="container mx-auto flex flex-col items-center gap-12">
+                        <div class="text-center max-w-3xl">
+                            <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#212529] dark:text-gray-100 mb-4 fade-in-on-scroll">Milhares de Vidas Transformadas</h2>
+                            <p class="text-lg text-gray-600 dark:text-gray-400 mx-auto fade-in-on-scroll" style="transition-delay: 100ms;">Veja (e ouça) o que os nossos alunos, que hoje vivem sem dor, estão a dizer.</p>
+                        </div>
+
+                        <div class="relative w-full flex flex-col items-center justify-center overflow-hidden marquee-container">
+                            <div class="flex shrink-0 justify-around gap-[var(--gap)] animate-marquee flex-row marquee-track">
+                                <!-- Testimonial Set 1 -->
+                                <div class="flex flex-col gap-6 p-6 rounded-lg border-t bg-gradient-to-b from-white/60 to-white/20 shadow-lg w-[320px] shrink-0 dark:from-gray-700/60 dark:to-gray-700/20 dark:border-gray-700">
+                                    <div class="flex items-center gap-4">
+                                        <img class="h-14 w-14 rounded-full" src="https://placehold.co/56x56/E9E4F4/5F30AC?text=AL" alt="Avatar Ana Lúcia">
+                                        <div class="flex flex-col items-start flex-grow">
+                                            <h3 class="text-lg font-semibold leading-none text-[#212529] dark:text-gray-100">Ana Lúcia, 52</h3>
+                                            <p class="text-sm text-gray-500 dark:text-gray-400">São Paulo, Brasil</p>
+                                        </div>
+                                        <button class="tts-button p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors" aria-label="Ouvir depoimento">
+                                             <i data-lucide="volume-2" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i>
+                                             <div class="loader tts-loader" style="display: none;"></div>
+                                        </button>
+                                    </div>
+                                    <p class="testimonial-text text-gray-700 dark:text-gray-300">"Pensei que nunca mais ia subir escadas. Com o Método Joelho Livre, em 3 semanas, a dor sumiu! É inacreditável!"</p>
+                                </div>
+                                <div class="flex flex-col gap-6 p-6 rounded-lg border-t bg-gradient-to-b from-white/60 to-white/20 shadow-lg w-[320px] shrink-0 dark:from-gray-700/60 dark:to-gray-700/20 dark:border-gray-700">
+                                    <div class="flex items-center gap-4">
+                                        <img class="h-14 w-14 rounded-full" src="https://placehold.co/56x56/E9E4F4/5F30AC?text=RS" alt="Avatar Ricardo Silva">
+                                        <div class="flex flex-col items-start flex-grow">
+                                            <h3 class="text-lg font-semibold leading-none text-[#212529] dark:text-gray-100">Ricardo Silva, 45</h3>
+                                            <p class="text-sm text-gray-500 dark:text-gray-400">Rio de Janeiro, Brasil</p>
+                                        </div>
+                                        <button class="tts-button p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors" aria-label="Ouvir depoimento">
+                                             <i data-lucide="volume-2" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i>
+                                             <div class="loader tts-loader" style="display: none;"></div>
+                                        </button>
+                                    </div>
+                                    <p class="testimonial-text text-gray-700 dark:text-gray-300">"Chega de remédios! O Eder ensinou-me o que fazer e hoje jogo futebol com os meus filhos sem sentir nada."</p>
+                                </div>
+                                 <div class="flex flex-col gap-6 p-6 rounded-lg border-t bg-gradient-to-b from-white/60 to-white/20 shadow-lg w-[320px] shrink-0 dark:from-gray-700/60 dark:to-gray-700/20 dark:border-gray-700">
+                                    <div class="flex items-center gap-4">
+                                        <img class="h-14 w-14 rounded-full" src="https://placehold.co/56x56/E9E4F4/5F30AC?text=MJ" alt="Avatar Maria José">
+                                        <div class="flex flex-col items-start flex-grow">
+                                            <h3 class="text-lg font-semibold leading-none text-[#212529] dark:text-gray-100">Maria José, 61</h3>
+                                            <p class="text-sm text-gray-500 dark:text-gray-400">Belo Horizonte, Brasil</p>
+                                        </div>
+                                        <button class="tts-button p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors" aria-label="Ouvir depoimento">
+                                             <i data-lucide="volume-2" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i>
+                                             <div class="loader tts-loader" style="display: none;"></div>
+                                        </button>
+                                    </div>
+                                    <p class="testimonial-text text-gray-700 dark:text-gray-300">"Voltei a fazer as minhas caminhadas no parque, coisa que eu amava e não conseguia mais. Sou outra pessoa!"</p>
+                                </div>
+                                <!-- Testimonial Set 2 (Duplicate for seamless loop) -->
+                                 <div class="flex flex-col gap-6 p-6 rounded-lg border-t bg-gradient-to-b from-white/60 to-white/20 shadow-lg w-[320px] shrink-0 dark:from-gray-700/60 dark:to-gray-700/20 dark:border-gray-700">
+                                    <div class="flex items-center gap-4">
+                                        <img class="h-14 w-14 rounded-full" src="https://placehold.co/56x56/E9E4F4/5F30AC?text=AL" alt="Avatar Ana Lúcia">
+                                        <div class="flex flex-col items-start flex-grow">
+                                            <h3 class="text-lg font-semibold leading-none text-[#212529] dark:text-gray-100">Ana Lúcia, 52</h3>
+                                            <p class="text-sm text-gray-500 dark:text-gray-400">São Paulo, Brasil</p>
+                                        </div>
+                                        <button class="tts-button p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors" aria-label="Ouvir depoimento">
+                                             <i data-lucide="volume-2" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i>
+                                             <div class="loader tts-loader" style="display: none;"></div>
+                                        </button>
+                                    </div>
+                                    <p class="testimonial-text text-gray-700 dark:text-gray-300">"Pensei que nunca mais ia subir escadas. Com o Método Joelho Livre, em 3 semanas, a dor sumiu! É inacreditável!"</p>
+                                </div>
+                                <div class="flex flex-col gap-6 p-6 rounded-lg border-t bg-gradient-to-b from-white/60 to-white/20 shadow-lg w-[320px] shrink-0 dark:from-gray-700/60 dark:to-gray-700/20 dark:border-gray-700">
+                                    <div class="flex items-center gap-4">
+                                        <img class="h-14 w-14 rounded-full" src="https://placehold.co/56x56/E9E4F4/5F30AC?text=RS" alt="Avatar Ricardo Silva">
+                                        <div class="flex flex-col items-start flex-grow">
+                                            <h3 class="text-lg font-semibold leading-none text-[#212529] dark:text-gray-100">Ricardo Silva, 45</h3>
+                                            <p class="text-sm text-gray-500 dark:text-gray-400">Rio de Janeiro, Brasil</p>
+                                        </div>
+                                        <button class="tts-button p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors" aria-label="Ouvir depoimento">
+                                             <i data-lucide="volume-2" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i>
+                                             <div class="loader tts-loader" style="display: none;"></div>
+                                        </button>
+                                    </div>
+                                    <p class="testimonial-text text-gray-700 dark:text-gray-300">"Chega de remédios! O Eder ensinou-me o que fazer e hoje jogo futebol com os meus filhos sem sentir nada."</p>
+                                </div>
+                                 <div class="flex flex-col gap-6 p-6 rounded-lg border-t bg-gradient-to-b from-white/60 to-white/20 shadow-lg w-[320px] shrink-0 dark:from-gray-700/60 dark:to-gray-700/20 dark:border-gray-700">
+                                    <div class="flex items-center gap-4">
+                                        <img class="h-14 w-14 rounded-full" src="https://placehold.co/56x56/E9E4F4/5F30AC?text=MJ" alt="Avatar Maria José">
+                                        <div class="flex flex-col items-start flex-grow">
+                                            <h3 class="text-lg font-semibold leading-none text-[#212529] dark:text-gray-100">Maria José, 61</h3>
+                                            <p class="text-sm text-gray-500 dark:text-gray-400">Belo Horizonte, Brasil</p>
+                                        </div>
+                                        <button class="tts-button p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors" aria-label="Ouvir depoimento">
+                                             <i data-lucide="volume-2" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i>
+                                             <div class="loader tts-loader" style="display: none;"></div>
+                                        </button>
+                                    </div>
+                                    <p class="testimonial-text text-gray-700 dark:text-gray-300">"Voltei a fazer as minhas caminhadas no parque, coisa que eu amava e não conseguia mais. Sou outra pessoa!"</p>
+                                </div>
+                            </div>
+                            <div class="pointer-events-none absolute inset-y-0 left-0 hidden w-1/4 bg-gradient-to-r from-[#F8F9FA] dark:from-gray-800 sm:block"></div>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 hidden w-1/4 bg-gradient-to-l from-[#F8F9FA] dark:from-gray-800 sm:block"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- NEW: Goal Visualizer Section -->
+                <section id="goal-visualizer" class="py-20 lg:py-32 bg-white dark:bg-gray-900">
+                    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                        <div class="max-w-3xl mx-auto text-center">
+                            <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#212529] dark:text-gray-100 mb-4 fade-in-on-scroll">Visualize Sua Vida Sem Dor ✨</h2>
+                            <p class="text-lg text-gray-600 dark:text-gray-400 mb-8 fade-in-on-scroll" style="transition-delay: 100ms;">
+                                Qual é a primeira coisa que você fará quando seu joelho não doer mais? Escreva abaixo e deixe nossa IA criar uma imagem vívida desse momento para você.
+                            </p>
+                            <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-2xl shadow-inner fade-in-on-scroll" style="transition-delay: 200ms;">
+                                <textarea id="goal-description" rows="2" class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] transition dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:placeholder-gray-400" placeholder="Ex: Brincar com meus netos no chão, voltar a correr no parque, subir escadas sem medo..."></textarea>
+                                <button id="visualize-button" class="rainbow-button mt-4 w-full h-12 text-base">
+                                    Visualizar Meu Futuro
+                                </button>
+                            </div>
+                            <div id="goal-result-container" class="mt-8 text-left" style="display: none;">
+                                <div id="goal-loader-container" class="text-center">
+                                    <div class="loader"></div>
+                                    <p class="text-gray-600 dark:text-gray-400">Criando sua visualização...</p>
+                                </div>
+                                <div id="goal-response" class="bg-[var(--color-primary)]/5 dark:bg-gray-800 p-6 rounded-2xl border border-[var(--color-primary)]/20 dark:border-gray-700 text-gray-700 dark:text-gray-300 italic text-lg leading-relaxed"></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- NEW: Section 9: The Offer -->
+                <section id="offer" class="py-20 lg:py-32 bg-[#F8F9FA] dark:bg-gray-800">
+                    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                        <div class="text-center max-w-3xl mx-auto">
+                            <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#212529] dark:text-gray-100 mb-4 fade-in-on-scroll">Sua chance de viver sem dor está aqui</h2>
+                            <p class="text-lg text-gray-600 dark:text-gray-400 fade-in-on-scroll" style="transition-delay: 100ms;">Um único investimento para uma solução definitiva. Compare e veja por que esta é a melhor decisão para sua saúde e seu bolso.</p>
+                        </div>
+                        
+                        <div class="grid lg:grid-cols-5 gap-8 items-start mt-16">
+                            <!-- Pricing and Bonuses Column -->
+                            <div class="lg:col-span-3 space-y-8">
+                                <!-- Pricing Card -->
+                                <div class="bg-violet-50 dark:bg-gray-900/50 border-2 border-purple-200 dark:border-[var(--color-primary)]/50 rounded-2xl p-8 fade-in-on-scroll">
+                                    <h3 class="text-2xl font-bold text-[#212529] dark:text-gray-100">Investimento Único</h3>
+                                    <p class="text-gray-600 dark:text-gray-400 mt-2">Acesso vitalício ao Método Joelho Livre completo.</p>
+                                    <div class="mt-6">
+                                        <p class="text-5xl font-extrabold text-[var(--color-primary)]">R$ 97</p>
+                                        <p class="text-gray-500 dark:text-gray-400">ou 3x de R$ 32,33 sem juros</p>
+                                    </div>
+                                    <p class="text-sm text-gray-500 dark:text-gray-500 mt-4">Compare: 20 sessões de fisio (R$ 1.600 - R$ 2.400)</p>
+                                </div>
+                                <!-- Bonuses -->
+                                <div class="fade-in-on-scroll" style="transition-delay: 200ms;">
+                                    <h3 class="text-2xl font-bold text-[#212529] dark:text-gray-100 mb-4">E você ainda leva 3 bônus exclusivos:</h3>
+                                    <div class="space-y-4">
+                                        <div class="bg-white dark:bg-gray-900/50 p-6 rounded-lg shadow-md flex items-start gap-4">
+                                            <i data-lucide="gift" class="w-8 h-8 text-[var(--color-primary)] mt-1"></i>
+                                            <div>
+                                                <h4 class="font-bold dark:text-gray-100">Bônus 1: Receitas Anti-inflamatórias</h4>
+                                                <p class="text-sm text-gray-600 dark:text-gray-400">Cardápio semanal para acelerar a recuperação. (Valor: R$ 67)</p>
+                                            </div>
+                                        </div>
+                                        <div class="bg-white dark:bg-gray-900/50 p-6 rounded-lg shadow-md flex items-start gap-4">
+                                            <i data-lucide="gift" class="w-8 h-8 text-[var(--color-primary)] mt-1"></i>
+                                            <div>
+                                                <h4 class="font-bold dark:text-gray-100">Bônus 2: Treino de Core Específico</h4>
+                                                <p class="text-sm text-gray-600 dark:text-gray-400">12 exercícios para fortalecer sua base e prevenir novas dores. (Valor: R$ 47)</p>
+                                            </div>
+                                        </div>
+                                        <div class="bg-white dark:bg-gray-900/50 p-6 rounded-lg shadow-md flex items-start gap-4">
+                                            <i data-lucide="gift" class="w-8 h-8 text-[var(--color-primary)] mt-1"></i>
+                                            <div>
+                                                <h4 class="font-bold dark:text-gray-100">Bônus 3: Suporte VIP WhatsApp (3 dias)</h4>
+                                                <p class="text-sm text-gray-600 dark:text-gray-400">Tire suas dúvidas diretamente comigo nos primeiros dias. (Valor: R$ 110)</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Final Offer Column -->
+                            <div data-glow class="lg:col-span-2 bg-white dark:bg-gray-900/50 rounded-2xl shadow-2xl p-8 lg:sticky top-24 fade-in-on-scroll overflow-hidden" style="transition-delay: 300ms;">
+                                <h3 class="text-2xl font-bold text-center text-[var(--color-primary)]">Oferta Especial por Tempo Limitado</h3>
+                                <p class="text-center text-gray-600 dark:text-gray-400 mt-2">De <span class="line-through">R$ 297</span> + <span class="line-through">R$ 224</span> em bônus</p>
+                                <p class="text-center text-lg mt-4 dark:text-gray-300">Por apenas:</p>
+                                <p class="text-6xl font-extrabold text-center text-[#212529] dark:text-gray-100 my-2">R$ 97</p>
+                                <a href="#" class="rainbow-button w-full mt-6 h-12 text-base">
+                                    SIM, QUERO ELIMINAR MINHAS DORES
+                                </a>
+                                <p class="text-center text-sm text-red-600 font-bold mt-4">Atenção: Apenas 50 vagas disponíveis este mês. Oferta válida até domingo, 23:59h.</p>
+                                <p class="text-xs text-center text-gray-500 dark:text-gray-500 mt-6">Uma única consulta com especialista custa de R$300 a R$500. Aqui, você investe R$97 uma vez para resolver o problema de forma definitiva.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- NEW: Section 10: Guarantee -->
+                <section id="guarantee" class="py-20 lg:py-32 bg-[#F8F9FA] dark:bg-gray-800">
+                    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                        <div class="max-w-4xl mx-auto grid md:grid-cols-2 gap-12 items-center">
+                            <div class="fade-in-on-scroll">
+                                <h2 class="text-3xl sm:text-4xl font-extrabold text-[#212529] dark:text-gray-100 mb-4">Sua Segurança Total: Risco Zero</h2>
+                                <p class="text-gray-600 dark:text-gray-400 mb-6">Sei que você já tentou de tudo e pode estar com o pé atrás. É normal. Por isso, ofereço uma garantia simples e direta: se em 7 dias você não gostar do método, por qualquer motivo, devolvemos 100% do seu dinheiro. Sem perguntas, sem burocracia.</p>
+                                <h3 class="text-xl font-bold mt-8 mb-4 dark:text-gray-200">Por que posso oferecer essa garantia?</h3>
+                                <ul class="space-y-2 text-gray-600 dark:text-gray-400">
+                                    <li class="flex items-start gap-3"><i data-lucide="check-circle" class="w-5 h-5 text-green-500 mt-1 shrink-0"></i><span>+1.000 pessoas transformadas na minha consultoria.</span></li>
+                                    <li class="flex items-start gap-3"><i data-lucide="check-circle" class="w-5 h-5 text-green-500 mt-1 shrink-0"></i><span>Participo de cirurgias no Hospital Adriano Jorge em Manaus.</span></li>
+                                    <li class="flex items-start gap-3"><i data-lucide="check-circle" class="w-5 h-5 text-green-500 mt-1 shrink-0"></i><span>Eu mesmo fiz cirurgia no joelho e uso este método para praticar esportes.</span></li>
+                                </ul>
+                            </div>
+                            <div data-glow class="bg-white dark:bg-gray-900/50 p-8 rounded-2xl shadow-2xl text-center border-t-8 border-[var(--color-primary)] fade-in-on-scroll overflow-hidden" style="transition-delay: 200ms;">
+                                <img src="https://placehold.co/120x120/E9E4F4/5F30AC?text=Selo+de+Garantia" alt="Selo de Garantia de 7 dias" class="mx-auto mb-6 rounded-full">
+                                <h3 class="text-2xl font-bold text-[#212529] dark:text-gray-100">Garantia Incondicional de 7 Dias</h3>
+                                <p class="text-gray-600 dark:text-gray-400 mt-4">Você testa o método completo. Se não funcionar como prometi, você recebe seu dinheiro de volta. O risco é todo meu. A única coisa que você pode perder é a chance de viver sem dor.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 6. FAQ Section -->
+                <section id="faq" class="py-20 lg:py-32 bg-white dark:bg-gray-900">
+                    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                        <div class="text-center mb-16">
+                            <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#212529] dark:text-gray-100 mb-4 fade-in-on-scroll">Perguntas Frequentes</h2>
+                            <p class="text-lg text-gray-600 dark:text-gray-400 max-w-3xl mx-auto fade-in-on-scroll" style="transition-delay: 100ms;">Tudo o que você precisa saber para começar sua jornada sem dor.</p>
+                        </div>
+                        <div class="max-w-3xl mx-auto" x-data="{ active: 1 }">
+                            <div class="space-y-4 fade-in-on-scroll">
+                                <div class="border-b border-gray-200 dark:border-gray-700 pb-4">
+                                    <button @click="active = active === 1 ? null : 1" class="w-full text-left flex justify-between items-center">
+                                        <span class="text-lg font-semibold text-[#212529] dark:text-gray-100">O Método funciona para qualquer tipo de dor no joelho?</span>
+                                        <svg class="w-5 h-5 text-gray-500 transform transition-transform" :class="{'rotate-180': active === 1}" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                                    </button>
+                                    <div x-show="active === 1" x-collapse class="mt-4 text-gray-600 dark:text-gray-400">
+                                        <p>Sim! Ele foi desenvolvido para atacar a causa raiz do desequilíbrio muscular que gera dor, independentemente da localização (frente, trás ou lateral) ou tempo que você sofre.</p>
+                                    </div>
+                                </div>
+                                <div class="border-b border-gray-200 dark:border-gray-700 pb-4">
+                                    <button @click="active = active === 2 ? null : 2" class="w-full text-left flex justify-between items-center">
+                                        <span class="text-lg font-semibold text-[#212529] dark:text-gray-100">Preciso de equipamentos especiais?</span>
+                                        <svg class="w-5 h-5 text-gray-500 transform transition-transform" :class="{'rotate-180': active === 2}" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                                    </button>
+                                    <div x-show="active === 2" x-collapse class="mt-4 text-gray-600 dark:text-gray-400">
+                                        <p>Não! O método é feito totalmente em casa, usando apenas o peso do corpo e, no máximo, objetos que você já tem, como uma cadeira ou garrafa de água.</p>
+                                    </div>
+                                </div>
+                                <div class="border-b border-gray-200 dark:border-gray-700 pb-4">
+                                    <button @click="active = active === 3 ? null : 3" class="w-full text-left flex justify-between items-center">
+                                        <span class="text-lg font-semibold text-[#212529] dark:text-gray-100">Quanto tempo por dia preciso dedicar?</span>
+                                        <svg class="w-5 h-5 text-gray-500 transform transition-transform" :class="{'rotate-180': active === 3}" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                                    </button>
+                                    <div x-show="active === 3" x-collapse class="mt-4 text-gray-600 dark:text-gray-400">
+                                        <p>Apenas 15 a 20 minutos diários são suficientes para você começar a sentir os resultados e progredir rumo à eliminação completa das dores.</p>
+                                    </div>
+                                </div>
+                                <div class="border-b border-gray-200 dark:border-gray-700 pb-4">
+                                    <button @click="active = active === 4 ? null : 4" class="w-full text-left flex justify-between items-center">
+                                        <span class="text-lg font-semibold text-[#212529] dark:text-gray-100">E se eu não gostar ou não vir resultados?</span>
+                                        <svg class="w-5 h-5 text-gray-500 transform transition-transform" :class="{'rotate-180': active === 4}" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                                    </button>
+                                    <div x-show="active === 4" x-collapse class="mt-4 text-gray-600 dark:text-gray-400">
+                                        <p>Você tem 7 dias de garantia incondicional! Se por qualquer motivo não estiver satisfeito, basta pedir o reembolso e devolveremos 100% do seu dinheiro, sem perguntas. O risco é todo meu!</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 7. Final CTA -->
+                <section id="final-cta" class="final-cta-gradient py-20 lg:py-32">
+                    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                        <div class="bg-white dark:bg-gray-900/50 rounded-2xl shadow-2xl p-8 md:p-12 lg:p-16 grid lg:grid-cols-2 gap-12 items-center fade-in-on-scroll">
+                            <div class="text-center lg:text-left">
+                                <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#212529] dark:text-gray-100 leading-tight mb-6">
+                                    Sua vida sem dor começa agora.
+                                </h2>
+                                <p class="text-lg text-gray-600 dark:text-gray-400 mb-8">
+                                    Não adie mais sua liberdade. Garanta seu acesso ao Método Joelho Livre com todos os bônus e a garantia de 7 dias. A decisão é sua.
+                                </p>
+                                <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                                    <a href="#offer" class="rainbow-button h-12 px-8">
+                                        QUERO MINHA VAGA AGORA
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="flex justify-center">
+                                <img src="https://placehold.co/400x500/E9E4F4/5F30AC?text=App+Mockup" 
+                                     alt="Mockup do aplicativo do Método Joelho Livre" 
+                                     class="rounded-xl shadow-lg w-full max-w-xs">
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+
+            <!-- 8. Footer -->
+            <footer class="bg-gray-900 text-white">
+                <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <div class="flex flex-col md:flex-row justify-between items-center text-center md:text-left">
+                        <p class="mb-4 md:mb-0">&copy; 2025 Método Joelho Livre. Todos os direitos reservados.</p>
+                        <div class="flex space-x-4">
+                            <a href="#" class="hover:text-gray-300 transition-colors">Instagram</a>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+
+            <!-- Offer Notification -->
+            <div id="offer-notification" class="fixed bottom-5 right-5 max-w-sm w-full z-50">
+                <a href="#offer" class="block">
+                    <div class="relative bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                        <button id="close-notification" class="absolute top-2 right-2 text-gray-400 hover:text-gray-600">
+                            <i data-lucide="x" class="w-5 h-5"></i>
+                        </button>
+                        <div class="flex items-start gap-4">
+                            <div class="flex h-10 w-10 items-center justify-center rounded-md bg-[var(--color-primary)] text-white shrink-0">
+                                <i data-lucide="gift"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-[#212529] dark:text-gray-100">Uma Oferta Para Você!</h4>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">Percebemos seu interesse em viver sem dor. Clique aqui para revelar uma condição exclusiva e por tempo limitado!</p>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    // Simple fade-in on scroll animation observer
+                    const observer = new IntersectionObserver((entries) => {
+                        entries.forEach(entry => {
+                            if (entry.isIntersecting) {
+                                entry.target.classList.add('visible');
+                            }
+                        });
+                    }, {
+                        threshold: 0.1
+                    });
+
+                    const elementsToAnimate = document.querySelectorAll('.fade-in-on-scroll');
+                    elementsToAnimate.forEach(el => observer.observe(el));
+
+                    // Gemini API Feature Script
+                    const geminiButton = document.getElementById('gemini-button');
+                    const painDescriptionInput = document.getElementById('pain-description');
+                    const resultContainer = document.getElementById('gemini-result-container');
+                    const responseDiv = document.getElementById('gemini-response');
+                    const loaderContainer = document.getElementById('loader-container');
+                    const disclaimer = document.getElementById('gemini-disclaimer');
+
+                    if(geminiButton) {
+                        geminiButton.addEventListener('click', () => callGeminiForExercises());
+                    }
+
+                    // Gemini Goal Visualizer Script
+                    const visualizeButton = document.getElementById('visualize-button');
+                    const goalDescriptionInput = document.getElementById('goal-description');
+                    const goalResultContainer = document.getElementById('goal-result-container');
+                    const goalResponseDiv = document.getElementById('goal-response');
+                    const goalLoaderContainer = document.getElementById('goal-loader-container');
+
+                    if(visualizeButton) {
+                        visualizeButton.addEventListener('click', () => {
+                            const goal = goalDescriptionInput.value;
+                            if (!goal.trim()) {
+                                alert('Por favor, descreva seu objetivo para criar a visualização.');
+                                return;
+                            }
+
+                            goalResultContainer.style.display = 'block';
+                            goalLoaderContainer.style.display = 'block';
+                            goalResponseDiv.style.display = 'none';
+                            goalResponseDiv.innerHTML = '';
+
+                            const prompt = `
+                                Aja como um coach motivacional e escritor criativo. Um usuário, que sofre com dor no joelho, compartilhou um objetivo que deseja alcançar quando estiver livre da dor. O objetivo é: "${goal}".
+                                Escreva um parágrafo curto (3-4 frases), inspirador e vívido, em primeira pessoa (como se fosse o usuário vivenciando o momento). Descreva a cena, os sentimentos e as sensações de realizar esse objetivo sem a limitação da dor. O tom deve ser positivo, emocionante e encorajador.
+                            `;
+
+                            callGeminiForText(prompt, goalResponseDiv, goalLoaderContainer);
+                        });
+                    }
+                    
+                    // TTS for Testimonials
+                    const ttsButtons = document.querySelectorAll('.tts-button');
+                    const audioPlayer = document.getElementById('tts-audio-player');
+
+                    ttsButtons.forEach(button => {
+                        button.addEventListener('click', () => {
+                            const card = button.closest('.flex-col');
+                            const textElement = card.querySelector('.testimonial-text');
+                            if (textElement) {
+                                generateAndPlayAudio(textElement.textContent, button);
+                            }
+                        });
+                    });
+
+
+                    // Universal Gemini API Call Function for TEXT
+                    const callGeminiForText = async (prompt, responseElement, loaderElement, disclaimerElement = null, retryCount = 0) => {
+                        const apiKey = ""; // API key is handled by the environment
+                        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                        
+                        const payload = {
+                            contents: [{ role: "user", parts: [{ text: prompt }] }]
+                        };
+
+                        try {
+                            const response = await fetch(apiUrl, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(payload)
+                            });
+
+                            if (!response.ok) {
+                                if (response.status !== 429) throw new Error(`API request failed with status ${response.status}`);
+                                throw new Error('Throttled');
+                            }
+                            
+                            const result = await response.json();
+
+                            if (result.candidates?.[0]?.content?.parts?.[0]) {
+                                let text = result.candidates[0].content.parts[0].text;
+                                responseElement.innerHTML = text.replace(/\n/g, '<br>');
+                            } else {
+                               throw new Error('Resposta da API inválida ou vazia.');
+                            }
+
+                        } catch (error) {
+                            if (retryCount < 3) {
+                                const delay = Math.pow(2, retryCount) * 1000;
+                                await new Promise(resolve => setTimeout(resolve, delay));
+                                return callGeminiForText(prompt, responseElement, loaderElement, disclaimerElement, retryCount + 1);
+                            } else {
+                                console.error("Error calling Gemini API after multiple retries:", error);
+                                responseElement.innerHTML = '<p class="text-red-600">Desculpe, não foi possível processar sua solicitação no momento. Por favor, tente novamente mais tarde.</p>';
+                            }
+                        } finally {
+                            loaderElement.style.display = 'none';
+                            responseElement.style.display = 'block';
+                            if (disclaimerElement) {
+                                disclaimerElement.style.display = 'block';
+                            }
+                        }
+                    };
+
+                    // Gemini API Call for structured JSON (Exercises)
+                    const callGeminiForExercises = async (retryCount = 0) => {
+                        const description = painDescriptionInput.value;
+                        if (!description.trim()) {
+                            alert('Por favor, descreva a sua dor para receber o plano de exercícios.');
+                            return;
+                        }
+
+                        resultContainer.style.display = 'block';
+                        loaderContainer.style.display = 'block';
+                        responseDiv.style.display = 'none';
+                        disclaimer.style.display = 'none';
+                        responseDiv.innerHTML = '';
+
+                        const prompt = `Aja como um especialista em reabilitação física, baseado nos princípios do "Método Joelho Livre". Um utilizador descreveu a sua dor da seguinte forma: "${description}". Com base nisto, gere um plano inicial de 2 a 3 exercícios simples e seguros para fazer em casa, sem equipamento. Forneça uma resposta JSON estruturada.`;
+                        
+                        const payload = {
+                            contents: [{ role: "user", parts: [{ text: prompt }] }],
+                            generationConfig: {
+                                responseMimeType: "application/json",
+                                responseSchema: {
+                                    type: "ARRAY",
+                                    items: {
+                                        type: "OBJECT",
+                                        properties: {
+                                            "nome": { "type": "STRING" },
+                                            "descricao": { "type": "STRING" },
+                                            "foco": { "type": "STRING" }
+                                        },
+                                        required: ["nome", "descricao", "foco"]
+                                    }
+                                }
+                            }
+                        };
+                        
+                        const apiKey = ""; 
+                        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+                        try {
+                            const response = await fetch(apiUrl, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(payload)
+                            });
+
+                            if (!response.ok) {
+                                 if (response.status !== 429) throw new Error(`API request failed with status ${response.status}`);
+                                throw new Error('Throttled');
+                            }
+
+                            const result = await response.json();
+                            
+                            if (result.candidates?.[0]?.content?.parts?.[0]) {
+                                const jsonText = result.candidates[0].content.parts[0].text;
+                                const exercises = JSON.parse(jsonText);
+                                
+                                let html = '<h3>✨ O seu Plano de Exercícios Inicial ✨</h3>';
+                                exercises.forEach(ex => {
+                                    html += `
+                                        <div class="bg-white dark:bg-gray-900/50 p-4 rounded-lg border border-gray-200 dark:border-gray-700 mt-4">
+                                            <h4 class="font-bold text-lg text-[var(--color-primary)]">${ex.nome}</h4>
+                                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-2"><strong>Foco:</strong> ${ex.foco}</p>
+                                            <p class="text-gray-700 dark:text-gray-300">${ex.descricao}</p>
+                                        </div>
+                                    `;
+                                });
+                                responseDiv.innerHTML = html;
+                            } else {
+                                throw new Error('Resposta da API inválida ou vazia.');
+                            }
+
+                        } catch (error) {
+                             if (retryCount < 3) {
+                                const delay = Math.pow(2, retryCount) * 1000;
+                                await new Promise(resolve => setTimeout(resolve, delay));
+                                return callGeminiForExercises(retryCount + 1);
+                            } else {
+                                console.error("Error calling Gemini API for exercises:", error);
+                                responseDiv.innerHTML = '<p class="text-red-600">Desculpe, não foi possível gerar o seu plano de exercícios. Por favor, tente novamente.</p>';
+                            }
+                        } finally {
+                            loaderContainer.style.display = 'none';
+                            responseDiv.style.display = 'block';
+                            disclaimer.style.display = 'block';
+                        }
+                    };
+
+                    // Gemini API Call for TTS
+                    const generateAndPlayAudio = async (text, buttonElement) => {
+                        const icon = buttonElement.querySelector('i');
+                        const loader = buttonElement.querySelector('.loader');
+
+                        icon.style.display = 'none';
+                        loader.style.display = 'block';
+                        buttonElement.disabled = true;
+
+                        const prompt = `Leia o seguinte depoimento num tom caloroso e encorajador, em português do Brasil: ${text}`;
+                        const payload = {
+                            contents: [{ parts: [{ text: prompt }] }],
+                            generationConfig: { responseModalities: ["AUDIO"] },
+                            model: "gemini-2.5-flash-preview-tts"
+                        };
+                        const apiKey = "";
+                        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
+
+                        try {
+                            const response = await fetch(apiUrl, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(payload)
+                            });
+                            if (!response.ok) throw new Error(`API request failed with status ${response.status}`);
+                            
+                            const result = await response.json();
+                            const audioData = result?.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+                            const mimeType = result?.candidates?.[0]?.content?.parts?.[0]?.inlineData?.mimeType;
+
+                            if (audioData && mimeType && mimeType.startsWith("audio/")) {
+                                const sampleRate = parseInt(mimeType.match(/rate=(\d+)/)[1], 10);
+                                const pcmData = base64ToArrayBuffer(audioData);
+                                const pcm16 = new Int16Array(pcmData);
+                                const wavBlob = pcmToWav(pcm16, 1, sampleRate);
+                                const audioUrl = URL.createObjectURL(wavBlob);
+                                
+                                audioPlayer.src = audioUrl;
+                                audioPlayer.play();
+                            } else {
+                                throw new Error("Dados de áudio inválidos na resposta.");
+                            }
+
+                        } catch (error) {
+                            console.error("Error generating TTS:", error);
+                            alert("Não foi possível reproduzir o áudio. Tente novamente mais tarde.");
+                        } finally {
+                            icon.style.display = 'block';
+                            loader.style.display = 'none';
+                            buttonElement.disabled = false;
+                        }
+                    };
+
+                    // Helper functions for audio conversion
+                    const base64ToArrayBuffer = (base64) => {
+                        const binaryString = window.atob(base64);
+                        const len = binaryString.length;
+                        const bytes = new Uint8Array(len);
+                        for (let i = 0; i < len; i++) {
+                            bytes[i] = binaryString.charCodeAt(i);
+                        }
+                        return bytes.buffer;
+                    };
+
+                    const pcmToWav = (pcmData, numChannels, sampleRate) => {
+                        const buffer = new ArrayBuffer(44 + pcmData.length * 2);
+                        const view = new DataView(buffer);
+
+                        // RIFF header
+                        writeString(view, 0, 'RIFF');
+                        view.setUint32(4, 36 + pcmData.length * 2, true);
+                        writeString(view, 8, 'WAVE');
+                        // fmt chunk
+                        writeString(view, 12, 'fmt ');
+                        view.setUint32(16, 16, true);
+                        view.setUint16(20, 1, true);
+                        view.setUint16(22, numChannels, true);
+                        view.setUint32(24, sampleRate, true);
+                        view.setUint32(28, sampleRate * numChannels * 2, true);
+                        view.setUint16(32, numChannels * 2, true);
+                        view.setUint16(34, 16, true);
+                        // data chunk
+                        writeString(view, 36, 'data');
+                        view.setUint32(40, pcmData.length * 2, true);
+
+                        // Write PCM data
+                        for (let i = 0; i < pcmData.length; i++) {
+                            view.setInt16(44 + i * 2, pcmData[i], true);
+                        }
+
+                        return new Blob([view], { type: 'audio/wav' });
+                    };
+
+                    const writeString = (view, offset, string) => {
+                        for (let i = 0; i < string.length; i++) {
+                            view.setUint8(offset + i, string.charCodeAt(i));
+                        }
+                    };
+                    
+                    // Initialize Lucide Icons
+                    lucide.createIcons();
+
+                    // Notification Script
+                    const notification = document.getElementById('offer-notification');
+                    const closeBtn = document.getElementById('close-notification');
+                    
+                    if(notification && closeBtn) {
+                        let lastScrollTop = 0;
+                        let scrollDirectionChanges = 0;
+                        let lastDirection = ''; // 'up' or 'down'
+                        let notificationShown = false;
+
+                        window.addEventListener('scroll', () => {
+                            if (notificationShown) return;
+
+                            let st = window.pageYOffset || document.documentElement.scrollTop;
+                            if (st === lastScrollTop) return; // Do nothing if scroll position hasn't changed
+
+                            let currentDirection = st > lastScrollTop ? 'down' : 'up';
+
+                            if (currentDirection !== lastDirection && st > 0) {
+                                scrollDirectionChanges++;
+                                lastDirection = currentDirection;
+                            }
+                            
+                            // Trigger after 3 up/down cycles (6 direction changes)
+                            if (scrollDirectionChanges >= 6) {
+                                notification.classList.add('visible');
+                                notificationShown = true;
+                            }
+
+                            lastScrollTop = st <= 0 ? 0 : st; 
+                        }, false);
+
+                        closeBtn.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            notification.classList.remove('visible');
+                        });
+                    }
+
+                    // Spotlight Card Script
+                    const syncPointer = (e) => {
+                        const { clientX: x, clientY: y } = e;
+                        const cards = document.querySelectorAll('[data-glow]');
+                        
+                        cards.forEach((card) => {
+                            card.style.setProperty('--x', x.toFixed(2));
+                            card.style.setProperty('--xp', (x / window.innerWidth).toFixed(2));
+                            card.style.setProperty('--y', y.toFixed(2));
+                            card.style.setProperty('--yp', (y / window.innerHeight).toFixed(2));
+                        });
+                    };
+                    document.addEventListener('pointermove', syncPointer);
+
+                    // Blur Text Script
+                    const blurTextContainer = document.getElementById('blur-text-container');
+                    if (blurTextContainer) {
+                        const text = blurTextContainer.innerText;
+                        const words = text.split(' ');
+                        blurTextContainer.innerHTML = '';
+                        words.forEach((word, index) => {
+                            const span = document.createElement('span');
+                            span.textContent = word + '\u00A0';
+                            span.style.transitionDelay = `${index * 80}ms`;
+                            blurTextContainer.appendChild(span);
+                        });
+
+                        const blurObserver = new IntersectionObserver((entries) => {
+                            entries.forEach(entry => {
+                                if (entry.isIntersecting) {
+                                    entry.target.classList.add('in-view');
+                                    blurObserver.unobserve(entry.target);
+                                }
+                            });
+                        }, { threshold: 0.5 });
+                        
+                        blurObserver.observe(blurTextContainer);
+                    }
+
+                    // Shuffle Grid Script
+                    const shuffleGrid = document.getElementById("shuffle-grid");
+
+                    if (shuffleGrid) {
+                        const squareData = [
+                            { id: 1, src: "https://images.unsplash.com/photo-1547347298-4074fc3086f0?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1740&q=80" },
+                            { id: 2, src: "https://images.unsplash.com/photo-1510925758641-869d353cecc7?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80" },
+                            { id: 3, src: "https://images.unsplash.com/photo-1629901925121-8a141c2a42f4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80" },
+                            { id: 4, src: "https://images.unsplash.com/photo-1580238053495-b9720401fd45?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80" },
+                            { id: 5, src: "https://images.unsplash.com/photo-1569074187119-c87815b476da?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1325&q=80" },
+                            { id: 6, src: "https://images.unsplash.com/photo-1556817411-31ae72fa3ea0?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1740&q=80" },
+                            { id: 7, src: "https://images.unsplash.com/photo-1599586120429-48281b6f0ece?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1740&q=80" },
+                            { id: 8, src: "https://plus.unsplash.com/premium_photo-1671436824833-91c0741e89c9?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1740&q=80" },
+                            { id: 9, src: "https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1740&q=80" },
+                            { id: 10, src: "https://images.unsplash.com/photo-1610768764270-790fbec18178?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80" },
+                            { id: 11, src: "https://images.unsplash.com/photo-1507034589631-9433cc6bc453?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=684&q=80" },
+                            { id: 12, src: "https://images.unsplash.com/photo-1533107862482-0e6974b06ec4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=882&q=80" },
+                            { id: 13, src: "https://images.unsplash.com/photo-1560089000-7433a4ebbd64?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=870&q=80" },
+                            { id: 14, src: "https://images.unsplash.com/photo-1517466787929-bc90951d0974?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=686&q=80" },
+                            { id: 15, src: "https://images.unsplash.com/photo-1606244864456-8bee63fce472?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=681&q=80" },
+                            { id: 16, src: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1820&q=80" },
+                        ];
+
+                        const shuffle = (array) => {
+                            let currentIndex = array.length, randomIndex;
+                            while (currentIndex != 0) {
+                                randomIndex = Math.floor(Math.random() * currentIndex);
+                                currentIndex--;
+                                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+                            }
+                            return array;
+                        };
+                        
+                        const generateSquares = () => {
+                            shuffleGrid.innerHTML = "";
+                            shuffle(squareData).forEach(sq => {
+                                const square = document.createElement('div');
+                                square.className = 'w-full h-full grid-square';
+                                square.style.backgroundImage = `url(${sq.src})`;
+                                shuffleGrid.appendChild(square);
+                            });
+                        };
+
+                        setInterval(generateSquares, 3000);
+                        generateSquares();
+                    }
+
+                    // Image Auto Slider Script
+                    const imageScrollTrack = document.getElementById('image-scroll-track');
+                    if (imageScrollTrack) {
+                        const images = [
+                            "http://googleusercontent.com/file_content/1",
+                            "http://googleusercontent.com/file_content/2",
+                            "https://i.postimg.cc/NMy202p8/imagem-2024-08-05-131350259.png",
+                            "https://images.unsplash.com/photo-1482881497185-d4a9ddbe4151?q=80&w=1965&auto=format&fit=crop",
+                            "https://plus.unsplash.com/premium_photo-1673264933212-d78737f38e48?q=80&w=1974&auto=format&fit=crop",
+                            "https://images.unsplash.com/photo-1524799526615-766a9833dec0?q=80&w=1935&auto=format&fit=crop"
+                        ];
+                        const duplicatedImages = [...images, ...images];
+                        let imageHTML = '';
+                        duplicatedImages.forEach((src, index) => {
+                            imageHTML += `
+                                <div class="image-item flex-shrink-0 w-48 h-48 md:w-64 md:h-64 lg:w-80 lg:h-80 rounded-xl overflow-hidden shadow-2xl">
+                                    <img src="${src}" alt="Gallery image ${index + 1}" class="w-full h-full object-cover" loading="lazy" />
+                                </div>
+                            `;
+                        });
+                        imageScrollTrack.innerHTML = imageHTML;
+                    }
+
+                    // Myna Hero Animation Script
+                    const heroTitle = document.getElementById('hero-title');
+                    if(heroTitle) {
+                        const titleWords = ["A", "REVOLUÇÃO", "PARA", "UMA", "VIDA", "SEM", "DOR"];
+                        titleWords.forEach((word, index) => {
+                            const span = document.createElement('span');
+                            span.textContent = word;
+                            span.className = "hero-word inline-block mx-1 md:mx-2";
+                            span.style.transitionDelay = `${index * 150}ms`;
+                            heroTitle.appendChild(span);
+                        });
+
+                        const heroObserver = new IntersectionObserver((entries) => {
+                            entries.forEach(entry => {
+                                if (entry.isIntersecting) {
+                                    const words = entry.target.querySelectorAll('.hero-word');
+                                    words.forEach(word => word.classList.add('visible'));
+                                    
+                                    const otherElements = document.querySelectorAll('#hero-subtitle, #hero-labels .fade-in-item, #hero-cta');
+                                    otherElements.forEach((el, index) => {
+                                        el.style.transitionDelay = `${(words.length * 150) + (index * 200)}ms`;
+                                        el.classList.add('visible');
+                                    });
+                                    
+                                    heroObserver.unobserve(entry.target);
+                                }
+                            });
+                        }, { threshold: 0.5 });
+                        
+                        heroObserver.observe(heroTitle);
+                    }
+
+                });
+
+            </script>
+        </body>
+        </html>
